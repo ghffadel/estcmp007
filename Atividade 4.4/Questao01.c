@@ -1,6 +1,7 @@
 // Dupla: Carlos Alberto de Jesus Vasconcelos e Gustavo Henrique Franco Fadel
+// COMANDO PARA COMPILAR: gcc -o Questao01 Questao01.c
 
-// Importando as bibliotecas necessárias
+// Declaração das bibliotecas necessárias
 # include <signal.h>
 # include <stdbool.h>
 # include <stdio.h>
@@ -8,11 +9,11 @@
 # include <sys/ipc.h>
 # include <sys/shm.h>
 # include <sys/types.h>
+# include <sys/wait.h>
+# include <time.h>
 # include <unistd.h>
 
-// Quantidade de vezes que o processo alterará a variável
-# define M 5
-// N = número de processos que terão concorrência no acesso à região crítica
+// Número de processos que terão concorrência no acesso à região crítica
 # define N 2
 
 // Variáveis compartilhadas
@@ -46,21 +47,23 @@ void leave_region (int i) {
 
 // Função que realiza a entrada e saída na região crítica
 void process (int i) {
-    printf("%p\n", interested);
-
-    for (int j = 0; j < M; j++) {
+    while (true) {
         enter_region(i);
-
+        // O novo valor da variável compartilhada será aleatório
         *shared_variable = rand();
         printf("\tShared variable value: %d\n", *shared_variable);
-        sleep(2);
-
+        // Alterando o tempo de sleep dependendo do parâmetro i
+        sleep(i + 1);
         leave_region(i);
     }
 }
 
 int main () {
+    int child_status;
     pid_t pid;
+
+    // Semente dos números aleatórios
+    srand(time(NULL));
 
     // Definindo um segmento de memória compartilhada para a vez
     int turn_id = shmget((key_t) 0x100, sizeof(int), 0666|IPC_CREAT);
@@ -74,7 +77,6 @@ int main () {
     int interested_id = shmget((key_t) 0x300, N * sizeof(bool), 0666|IPC_CREAT);
     interested = (bool *) shmat(interested_id, 0, 0);
 
-
     // Um processo aleatório irá começar
     *turn = rand() % N;
 
@@ -83,19 +85,28 @@ int main () {
         interested[i] = false;
     }
 
-    while (true) {
-        if ((pid = fork()) >= 0) {
-            process(pid > 0);
-        }
+    // Criação de um novo processo
+    pid = fork();
 
-        else {
-            printf("Error in creating process\n");
-            break;
-        }
-
-        sleep(1);
-        kill(pid, SIGKILL);
+    // Verfica se houve algum erro no fork
+    if (pid < 0) {
+        perror("fork = ");
+        exit(1);
     }
+
+    // Processo-filho
+    else if (pid == 0) {
+        process(0);
+        exit(0);
+    }
+
+    // Processo-pai
+    else {
+        process(1);
+    }
+
+    // Espera o retorno do processo-filho
+    wait(&child_status);
 
     return 0;
 }
