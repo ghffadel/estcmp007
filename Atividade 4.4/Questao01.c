@@ -2,7 +2,6 @@
 // COMANDO PARA COMPILAR: gcc -o Questao01 Questao01.c
 
 // Declaração das bibliotecas necessárias
-# include <signal.h>
 # include <stdbool.h>
 # include <stdio.h>
 # include <stdlib.h>
@@ -13,6 +12,8 @@
 # include <time.h>
 # include <unistd.h>
 
+// Valor máximo do número aleatório
+# define MAXVALUE 1000
 // Número de processos que terão concorrência no acesso à região crítica
 # define N 2
 
@@ -34,6 +35,8 @@ void enter_region (int i) {
             printf("Process %d is waiting\n", i);
             printed = true;
         }
+
+        sleep(i + 1);
     }
 
     // O processo entrou na região crítica
@@ -47,10 +50,13 @@ void leave_region (int i) {
 
 // Função que realiza a entrada e saída na região crítica
 void process (int i) {
+    // Semente dos números aleatórios
+    srand(time(NULL) + i);
+
     while (true) {
         enter_region(i);
         // O novo valor da variável compartilhada será aleatório
-        *shared_variable = rand();
+        *shared_variable = rand() % MAXVALUE;
         printf("\tShared variable value: %d\n", *shared_variable);
         // Alterando o tempo de sleep dependendo do parâmetro i
         sleep(i + 1);
@@ -61,9 +67,6 @@ void process (int i) {
 int main () {
     int child_status;
     pid_t pid;
-
-    // Semente dos números aleatórios
-    srand(time(NULL));
 
     // Definindo um segmento de memória compartilhada para a vez
     int turn_id = shmget((key_t) 0x100, sizeof(int), 0666|IPC_CREAT);

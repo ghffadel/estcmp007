@@ -3,7 +3,6 @@
 
 // Declaração das bibliotecas necessárias
 # include <fcntl.h>
-# include <signal.h>
 # include <semaphore.h>
 # include <stdbool.h>
 # include <stdio.h>

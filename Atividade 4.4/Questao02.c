@@ -2,7 +2,6 @@
 // COMANDO PARA COMPILAR: gcc -o Questao02 Questao02.c
 
 // Declaração das bibliotecas necessárias
-# include <signal.h>
 # include <semaphore.h>
 # include <stdbool.h>
 # include <stdio.h>
@@ -66,28 +65,26 @@ void consume_item (int item) {
 // Definindo a função do produtor
 void producer (void) {
     while (true) {
-        printf("\nPRODUCING...\n");
-
-        int item = produce_item();
-
         // Se o buffer estiver cheio, o produtor passará a "dormir"
         if (*count == N) {
             printf("\nPRODUCER WILL SLEEP...\n");
             *producer_sleeping = true;
         }
 
-        // O loop não continuará sua execução se o produtor estiver "dormindo"
-        if (*producer_sleeping) {
-            continue;
-        }
+        // O produtor só produzirá se não estiver dormindo
+        if (!(*producer_sleeping)) {
+            printf("\nPRODUCING...\n");
 
-        insert_item(item);
-        *count = (*count + 1);
+            int item = produce_item();
 
-        // Se o buffer passar a ter 1 elemento, o consumidor não estará mais "dormindo"
-        if (*count == 1) {
-            printf("\nCONSUMER WILL WAKE UP...\n");
-            *consumer_sleeping = false;
+            insert_item(item);
+            *count = (*count + 1);
+
+            // Se o buffer passar a ter 1 elemento, o consumidor não estará mais "dormindo"
+            if (*count == 1) {
+                printf("\nCONSUMER WILL WAKE UP...\n");
+                *consumer_sleeping = false;
+            }
         }
 
         // Espera de 1 segundo para a próxima execução
@@ -98,29 +95,27 @@ void producer (void) {
 // Definindo a função do consumidor
 void consumer (void) {
     while (true) {
-        printf("\nCONSUMING...\n");
-
         // Se não houver elementos no buffer, o consumidor irá "dormir"
         if (*count == 0) {
             printf("\nCONSUMER WILL SLEEP...\n");
             *consumer_sleeping = true;
         }
 
-        // O loop não continuará sua execução se o consumidor estiver "dormindo"
-        if (*consumer_sleeping) {
-            continue;
+        // O consumidor só irá consumir se não estiver dormindo
+        if (!(*consumer_sleeping)) {
+            printf("\nCONSUMING...\n");
+
+            int item = remove_item();
+            *count = (*count - 1);
+
+            // Se houver 1 espaço vazio no buffer, o consumidor não estará mais "dormindo"
+            if (*count == N - 1) {
+                printf("\nPRODUCER WILL WAKE UP...\n");
+                *producer_sleeping = false;
+            }
+
+            consume_item(item);
         }
-
-        int item = remove_item();
-        *count = (*count - 1);
-
-        // Se houver 1 espaço vazio no buffer, o consumidor não estará mais "dormindo"
-        if (*count == N - 1) {
-            printf("\nPRODUCER WILL WAKE UP...\n");
-            *producer_sleeping = false;
-        }
-
-        consume_item(item);
 
         // Espera de 2 segundos para a próxima execução
         sleep(2);

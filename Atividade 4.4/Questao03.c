@@ -3,7 +3,6 @@
 
 // Declaração das bibliotecas necessárias
 # include <fcntl.h>
-# include <signal.h>
 # include <semaphore.h>
 # include <stdbool.h>
 # include <stdio.h>
@@ -77,7 +76,7 @@ void producer (void) {
         // Saindo da região crítica
         sem_post(mutex);
         // Incrementando um espaço preenchido
-		    sem_post(full);
+		sem_post(full);
         // Espera de 1 segundo para a próxima execução
         sleep(1);
     }
@@ -95,8 +94,8 @@ void consumer (void) {
         // Saindo da região crítica
         sem_post(mutex);
         // Incrementando um espaço vazio
-		    sem_post(empty);
-		    consume_item(item);
+		sem_post(empty);
+		consume_item(item);
         // Espera de 2 segundos para a próxima execução
         sleep(2);
     }
