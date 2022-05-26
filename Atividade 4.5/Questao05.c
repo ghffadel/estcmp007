@@ -1,5 +1,5 @@
 // Dupla: Carlos Alberto de Jesus Vasconcelos e Gustavo Henrique Franco Fadel
-// COMANDO PARA COMPILAR: gcc -o Questao01 Questao01.c -pthread
+// COMANDO PARA COMPILAR: gcc -o Questao05 Questao05.c -pthread
 
 // Declaração de bibliotecas
 # include <pthread.h>
