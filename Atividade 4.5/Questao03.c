@@ -3,6 +3,7 @@
 
 // Declaração de bibliotecas
 # include <limits.h>
+# include <math.h>
 # include <pthread.h>
 # include <stdbool.h>
 # include <stdint.h>
@@ -45,9 +46,9 @@ int generate_burst_time (int quantum) {
     return number;
 }
 
-// Gera um número de fila aleatório no intervalo [0, N)
+// Gera um número de fila aleatório, consistindo em uma potência de 2
 int generate_queue_number () {
-    return rand() % N;
+    return pow(2, rand() % N);
 }
 
 // Imprime informações relevantes sobre os processos (nome, número da fila e tempo de execução restante)
@@ -70,7 +71,7 @@ void print_processes () {
 // Função para escolher a próxima posição
 void choose_next () {
     bool finished_all = true;
-    int next_position, highest_queue = INT_MIN;
+    int next_position, lowest_queue = INT_MAX;
     
     for (int i = 0; i < N; i++) {
         // Se o processo ainda não terminou de ser executado, então nem todos terminaram
@@ -78,14 +79,14 @@ void choose_next () {
             finished_all = false;
         }
         
-        // Verifica se o processo ainda não terminou de ser executado e se tem o maior número de fila
-        if (processes[i].burst_time > 0 && processes[i].queue > highest_queue) {
-            highest_queue = processes[i].queue;
+        // Verifica se o processo ainda não terminou de ser executado e se tem o menor número de fila
+        if (processes[i].burst_time > 0 && processes[i].queue < lowest_queue) {
+            lowest_queue = processes[i].queue;
             next_position = processes[i].position;
         }
     }
     
-    // Se nem todos os processos terminaram, a vez será do processo com maior número de fila
+    // Se nem todos os processos terminaram, a vez será do processo com menor número de fila
     if (!finished_all) {
         turn = next_position;
     }
@@ -117,18 +118,10 @@ void *run (void *tid) {
             printf("Process %c\tExecution time: %d\tRemaining time: 0\t\n", processes[i].name, processes[i].burst_time);
             processes[i].burst_time = 0;
         }
-        
-        // Atualiza os números de fila, aumentando o número da fila dos processos que não foram executados e diminuindo o do processo que acabou de ser executado
-        for (int i = 0; i < N; i++) {
-            if (processes[i].burst_time > 0) {
-                if (i == turn) {
-                    processes[i].queue = max(0, processes[i].queue - 1);
-                }
-                
-                else {
-                    processes[i].queue = min(processes[i].queue + 1, N);
-                }
-            }
+
+        // Se o processo não terminou de executar, passará para a próxima fila    
+        if (processes[turn].burst_time > 0) {
+            processes[turn].queue *= 2;
         }
         
         // Escolhe a próxima posição
