@@ -1,3 +1,6 @@
+// Dupla: Carlos Alberto de Jesus Vasconcelos e Gustavo Henrique Franco Fadel
+// COMANDO PARA COMPILAR: gcc -o Questao04 Questao04.c -pthread
+
 // Declaração de bibliotecas
 # include <limits.h>
 # include <pthread.h>
